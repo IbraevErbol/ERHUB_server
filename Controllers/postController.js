@@ -11,14 +11,20 @@ export const createPost = async (req, res) => {
   try {
     const { title, content, tags } = req.body;
 
-    const imageUrl = req.file
-      ? `${process.env.SERVER_URL}/uploads/${req.file.filename}`
-      : null;
+
+    // Если файл загружен, используем URL, предоставленный Cloudinary (multer-storage-cloudinary)
+    const imageUrl = req.file ? req.file.path : null;
+    const imagePublicId = req.file ? req.file.filename : null; // или req.file.public_id, если так возвращается
+
+    // const imageUrl = req.file
+    //   ? `${process.env.SERVER_URL}/uploads/${req.file.filename}`
+    //   : null;
 
     const newPost = new Post({
       title,
       content,
       imageUrl,
+      imagePublicId,
       author: req.user._id,
       tags: tags ? JSON.parse(tags) : [],  // Преобразуем строку в массив
     });
@@ -124,21 +130,31 @@ export const deletePosts = async (req, res) => {
       return res.status(404).json({ message: "Пост не найден" });
     }
 
-    if (post.imageUrl) {
-      const imagePath = post.imageUrl.replace(process.env.SERVER_URL, "");
-      const filePath = path.join(
-        dirname(fileURLToPath(import.meta.url)),
-        "..",
-        imagePath
-      );
-
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-        // console.log("Изображение успешно удалено:", filePath);
-      } else {
-        console.log("Изображение не найдено:", filePath);
+     // Если изображение было загружено в Cloudinary, удаляем его через API
+     if (post.imageUrl && post.imagePublicId) {
+      try {
+        await cloudinary.uploader.destroy(post.imagePublicId);
+        console.log("Изображение удалено из Cloudinary:", post.imagePublicId);
+      } catch (err) {
+        console.error("Ошибка при удалении изображения из Cloudinary:", err);
       }
     }
+
+    // if (post.imageUrl) {
+    //   const imagePath = post.imageUrl.replace(process.env.SERVER_URL, "");
+    //   const filePath = path.join(
+    //     dirname(fileURLToPath(import.meta.url)),
+    //     "..",
+    //     imagePath
+    //   );
+
+    //   if (fs.existsSync(filePath)) {
+    //     fs.unlinkSync(filePath);
+    //     // console.log("Изображение успешно удалено:", filePath);
+    //   } else {
+    //     console.log("Изображение не найдено:", filePath);
+    //   }
+    // }
 
     const deletePost = await Post.findByIdAndDelete(postId);
     if (!deletePost) {
