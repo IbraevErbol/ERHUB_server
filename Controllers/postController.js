@@ -140,21 +140,6 @@ export const deletePosts = async (req, res) => {
       }
     }
 
-    // if (post.imageUrl) {
-    //   const imagePath = post.imageUrl.replace(process.env.SERVER_URL, "");
-    //   const filePath = path.join(
-    //     dirname(fileURLToPath(import.meta.url)),
-    //     "..",
-    //     imagePath
-    //   );
-
-    //   if (fs.existsSync(filePath)) {
-    //     fs.unlinkSync(filePath);
-    //     // console.log("Изображение успешно удалено:", filePath);
-    //   } else {
-    //     console.log("Изображение не найдено:", filePath);
-    //   }
-    // }
 
     const deletePost = await Post.findByIdAndDelete(postId);
     if (!deletePost) {
@@ -305,20 +290,25 @@ export const getPostsLikes = async(req, res) => {
 const calculateRating = ({ commentsCount, likes, contentLength }) => {
   let rating = 0;
 
-  // Лайки
-  rating += likes.length * 2;
+  // Лайки: максимум 40 очков
+  const likeScore = Math.min(likes.length * 2, 40);
+  rating += likeScore;
 
-  // Комментарии
-  rating += commentsCount * 1.5;
+  // Комментарии: максимум 30 очков
+  const commentScore = Math.min(commentsCount * 1.5, 30);
+  rating += commentScore;
 
-  // Длина контента
+  // Контент: максимум 30 очков
+  let contentScore = 0;
   if (contentLength <= 50) {
-    rating += contentLength * 0.1;
-  } else if (contentLength <= 150 && contentLength >50) {
-    rating += contentLength * 0.2;
+    contentScore = contentLength * 0.1;
+  } else if (contentLength <= 150) {
+    contentScore = contentLength * 0.2;
   } else {
-    rating += contentLength * 0.1;
+    contentScore = Math.log10(contentLength) * 5; //log(1000) = 3
   }
+  contentScore = Math.min(contentScore, 30);
+  rating += contentScore;
 
-  return rating;
+  return Math.min(rating, 100);
 };
