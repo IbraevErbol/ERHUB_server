@@ -11,12 +11,12 @@ const postSchema = new mongoose.Schema(
       required: true,
     },
     imageUrl: {
-      type: String, // Путь к изображению на сервере
+      type: String, 
       required: false,
     },
     author: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Users', // Ссылка на модель User
+      ref: 'Users', 
       required: true,
     },
     tags: {
@@ -31,7 +31,7 @@ const postSchema = new mongoose.Schema(
         },
         author: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: 'Users', // Ссылка на модель User
+          ref: 'Users', 
           required: true,
         },
         createdAt: {

@@ -12,9 +12,8 @@ export const createPost = async (req, res) => {
     const { title, content, tags } = req.body;
 
 
-    // Если файл загружен, используем URL, предоставленный Cloudinary (multer-storage-cloudinary)
     const imageUrl = req.file ? req.file.path : null;
-    const imagePublicId = req.file ? req.file.filename : null; // или req.file.public_id, если так возвращается
+    const imagePublicId = req.file ? req.file.filename : null;
 
     // const imageUrl = req.file
     //   ? `${process.env.SERVER_URL}/uploads/${req.file.filename}`
@@ -26,7 +25,7 @@ export const createPost = async (req, res) => {
       imageUrl,
       imagePublicId,
       author: req.user._id,
-      tags: tags ? JSON.parse(tags) : [],  // Преобразуем строку в массив
+      tags: tags ? JSON.parse(tags) : [],  
     });
 
     await newPost.save();
@@ -108,7 +107,7 @@ export const getUserPosts = async (req, res) => {
 
     const postsWithRatings = posts.map((post) => ({
       ...post,
-      rating: ratingsMap[post._id.toString()] || 0, // Если нет рейтинга, ставим 0
+      rating: ratingsMap[post._id.toString()] || 0,
     }));
 
     res.json(postsWithRatings);
@@ -130,7 +129,7 @@ export const deletePosts = async (req, res) => {
       return res.status(404).json({ message: "Пост не найден" });
     }
 
-     // Если изображение было загружено в Cloudinary, удаляем его через API
+    
      if (post.imageUrl && post.imagePublicId) {
       try {
         await cloudinary.uploader.destroy(post.imagePublicId);
@@ -250,8 +249,8 @@ export const toggleLike = async (req, res) => {
       res.status(200).json(
         {
           message: 'Like toggled successfully',
-          liked: !alreadyLiked, // статус лайка
-          likesCount: postRating.likes.length, // количество лайков
+          liked: !alreadyLiked, 
+          likesCount: postRating.likes.length,
           rating: postRating.rating,
         });
     }
@@ -266,7 +265,6 @@ export const getPostsLikes = async(req, res) => {
   try {
     const postId = req.params.id;
 
-    // Находим документ рейтинга для заданного поста
     const rating = await PostRatings.findOne({postId}).populate('likes', '_id');
 
     if(!rating){
